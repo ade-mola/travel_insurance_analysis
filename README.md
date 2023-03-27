@@ -10,3 +10,9 @@ They want to know:
 1. Are there differences in the travel habits between customers and non-customers?
 2. What is the typical profile of customers and non-customers?
 
+## Result
+RandomForestClassifier classification model: ROC_AUC Score of 78.2%.
+
+## Streamlit Deployment
+
+[ML App](https://ade-mola-travel-insurance-analysis-app-io2e4c.streamlit.app/)
