@@ -11,7 +11,7 @@ They want to know:
 2. What is the typical profile of customers and non-customers?
 
 ## Result
-RandomForestClassifier classification model: ROC_AUC Score of 78.2%.
+RandomForestClassifier classification model: ROC_AUC Score of 0.782
 
 ## Streamlit Deployment
 
