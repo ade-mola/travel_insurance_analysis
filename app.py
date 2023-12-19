@@ -1,7 +1,46 @@
 import pickle
+import warnings
+
 import pandas as pd
-import numpy as np
 import streamlit as st
+
+
+class InconsistentVersionWarning(UserWarning):
+    """Warning raised when an estimator is unpickled with a inconsistent version.
+
+    Parameters
+    ----------
+    estimator_name : str
+        Estimator name.
+
+    current_sklearn_version : str
+        Current scikit-learn version.
+
+    original_sklearn_version : str
+        Original scikit-learn version.
+    """
+
+    def __init__(
+        self, *, estimator_name, current_sklearn_version, original_sklearn_version
+    ):
+        self.estimator_name = estimator_name
+        self.current_sklearn_version = current_sklearn_version
+        self.original_sklearn_version = original_sklearn_version
+
+    def __str__(self):
+        return (
+            f"Trying to unpickle estimator {self.estimator_name} from version"
+            f" {self.original_sklearn_version} when "
+            f"using version {self.current_sklearn_version}. This might lead to breaking"
+            " code or "
+            "invalid results. Use at your own risk. "
+            "For more info please refer to:\n"
+            "https://scikit-learn.org/stable/model_persistence.html"
+            "#security-maintainability-limitations"
+        )
+
+
+warnings.simplefilter("error", InconsistentVersionWarning)
 
 
 class TravelInsuranceModel:
@@ -10,7 +49,11 @@ class TravelInsuranceModel:
 
     def load_model(self, model_file_path):
         with open(model_file_path, "rb") as f:
-            return pickle.load(f)
+            # return pickle.load(f)
+            try:
+                return pickle.load(f)
+            except InconsistentVersionWarning as w:
+                print(w.original_sklearn_version)
 
     def predict_views(self, data):
         x = pd.DataFrame(data, index=[0])
@@ -22,9 +65,14 @@ class TravelInsuranceModel:
 
         # x["AgeGroup"] = np.where(int(x["Age"]) < 30, "20-29", "30-39")
 
-        cat_cols = ['EmploymentType', 'GraduateOrNot', 'ChronicDiseases', 
-                    'FrequentFlyer', 'EverTravelledAbroad']
-        
+        cat_cols = [
+            "EmploymentType",
+            "GraduateOrNot",
+            "ChronicDiseases",
+            "FrequentFlyer",
+            "EverTravelledAbroad",
+        ]
+
         x[cat_cols] = x[cat_cols].apply(lambda x: x.astype("category"))
         for col in cat_cols:
             x[col] = x[col].cat.codes
@@ -65,12 +113,11 @@ class TravelInsuranceApp:
             "Employment Type: ", ["Government Sector", "Private Sector/Self Employed"]
         )
         graduate = st.radio("Graduated College? : ", ["Yes", "No"])
-        income = st.number_input('Input Annual Income:', 300000, 1800000)
+        income = st.number_input("Input Annual Income:", 300000, 1800000)
         family_members = st.text_input("Size of Family Members: ")
         chronic_disease = st.radio("Any history of chronic disease? : ", ["Yes", "No"])
         frequent_flyer = st.radio("Are you a frequent flyer? : ", ["Yes", "No"])
         travelled_abroad = st.radio("Have you ever traveled abroad ? : ", ["Yes", "No"])
-        
 
         data = {
             "Age": age,
@@ -95,9 +142,9 @@ class TravelInsuranceApp:
         if st.button("Predict"):
             purchase = self.model.predict_views(data)
             if purchase == 1:
-                purchase = 'Yes'
+                purchase = "Yes"
             else:
-                purchase = 'No'
+                purchase = "No"
             self.show_prediction_result(purchase)
 
 
